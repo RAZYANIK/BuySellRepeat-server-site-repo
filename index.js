@@ -63,6 +63,12 @@ async function run() {
             res.send(options);
         }
         );
+        app.delete('/reportedItems/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await reportedProductCollection.deleteOne(query);
+            res.send(result);
+        })
         app.get('/categories/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -177,7 +183,7 @@ async function run() {
             const query = { email: decodedEmail };
             const user = await usersCollection.findOne(query);
 
-            if (user?.role !== 'admin') {
+            if (user?.role !== 'Seller') {
                 return res.status(403).send({ message: 'forbidden access' })
             }
 
