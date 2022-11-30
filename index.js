@@ -107,6 +107,15 @@ async function run() {
             const users = await usersCollection.find(query).toArray();
             res.send(users);
         });
+
+        // Admin chcek
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isAdmin: user?.role === 'admin' });
+        })
+
         app.put('/users/admin/:id', verifyJWT, async (req, res) => {
             const decodedEmail = req.decoded.email;
             const query = { email: decodedEmail };
@@ -121,7 +130,7 @@ async function run() {
             const options = { upsert: true };
             const updatedDoc = {
                 $set: {
-                    role: 'admin'
+                    seller: 'verified'
                 }
             }
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
