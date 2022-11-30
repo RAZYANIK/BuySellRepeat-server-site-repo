@@ -41,23 +41,17 @@ async function run() {
         const categoryCollection = client.db('Assignment-12').collection('categories');
         const bookingsCollection = client.db('Assignment-12').collection('bookings');
         const usersCollection = client.db('Assignment-12').collection('user');
+        const addedProductCollection = client.db('Assignment-12').collection('product');
 
         app.get('/categories', async (req, res) => {
-            // const date = req.query.date;
             const query = {};
             const options = await categoryCollection.find(query).toArray();
-
-            // get the bookings of the provided date
-            // const bookingQuery = { appointmentDate: date }
-            // const alreadyBooked = await bookingsCollection.find(bookingQuery).toArray();
-
-            // // code carefully :D
-            // options.forEach(option => {
-            //     const optionBooked = alreadyBooked.filter(book => book.treatment === option.name);
-            //     const bookedSlots = optionBooked.map(book => book.slot);
-            //     const remainingSlots = option.slots.filter(slot => !bookedSlots.includes(slot))
-            //     option.slots = remainingSlots;
-            // })
+            res.send(options);
+        }
+        );
+        app.get('/product', async (req, res) => {
+            const query = {};
+            const options = await addedProductCollection.find(query).toArray();
             res.send(options);
         }
         );
@@ -67,8 +61,17 @@ async function run() {
             const categories = await categoryCollection.findOne(query);
             res.send(categories);
         })
-
-
+        app.post('/product', async (req, res) => {
+            const addProduct = req.body;
+            const result = await addedProductCollection.insertOne(addProduct);
+            res.send(result);
+        })
+        app.delete('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await addedProductCollection.deleteOne(query);
+            res.send(result);
+        })
         app.get('/bookings', verifyJWT, async (req, res) => {
             const email = req.query.email;
             const decodedEmail = req.decoded.email;
@@ -134,6 +137,26 @@ async function run() {
                 }
             }
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+        app.put('/product/admin/:id', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await usersCollection.findOne(query);
+
+            if (user?.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    ad: 'advertised'
+                }
+            }
+            const result = await addedProductCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
 
