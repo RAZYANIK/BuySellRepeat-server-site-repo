@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -42,6 +43,7 @@ async function run() {
         const bookingsCollection = client.db('Assignment-12').collection('bookings');
         const usersCollection = client.db('Assignment-12').collection('user');
         const addedProductCollection = client.db('Assignment-12').collection('product');
+        const reportedProductCollection = client.db('Assignment-12').collection('reportedItems');
 
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -52,6 +54,12 @@ async function run() {
         app.get('/product', async (req, res) => {
             const query = {};
             const options = await addedProductCollection.find(query).toArray();
+            res.send(options);
+        }
+        );
+        app.get('/reportedItems', async (req, res) => {
+            const query = {};
+            const options = await reportedProductCollection.find(query).toArray();
             res.send(options);
         }
         );
@@ -115,6 +123,12 @@ async function run() {
             const users = await usersCollection.find(query).toArray();
             res.send(users);
         });
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // Admin check
         app.get('/users/admin/:email', async (req, res) => {
